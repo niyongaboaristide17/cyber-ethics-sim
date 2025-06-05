@@ -133,10 +133,7 @@ UserSchema.pre<UserDocument>('save', async function (next) {
         );
       }
 
-      this.password = await PasswordHasher.hashPassword(
-        this.password,
-        saltRounds,
-      );
+      this.password = await PasswordHasher.hashPassword(this.password);
     } catch (error) {
       return next(error);
     }

@@ -1,12 +1,16 @@
 import * as bcrypt from 'bcrypt';
+import { BadRequestException } from '@nestjs/common';
 
 export class PasswordHasher {
-  static async hashPassword(
-    password: string,
-    saltRounds: number,
-  ): Promise<string> {
+  static async hashPassword(password: string): Promise<string> {
+    const saltRoundsEnv = process.env.BCRYPT_SALT_ROUNDS;
+
+    const saltRounds = parseInt(saltRoundsEnv || '', 10);
+
     if (isNaN(saltRounds)) {
-      throw new Error('Salt rounds must be a valid number');
+      throw new BadRequestException(
+        'Invalid BCRYPT_SALT_ROUNDS value in environment',
+      );
     }
 
     const salt = await bcrypt.genSalt(saltRounds);

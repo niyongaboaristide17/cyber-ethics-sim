@@ -1,14 +1,21 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { PasswordHasher } from '../shared/utils/password-hasher.util';
 import { UserDocument } from '../users/schemas/user.schema';
+import { EmailService } from '../email/email.service';
+import { PasswordResetDto } from './dto/password-reset.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<UserDocument> {
@@ -38,4 +45,40 @@ export class AuthService {
       partialToken: this.jwtService.sign(payload, { expiresIn: '5m' }),
     };
   }
+
+  async generateResetToken(email: string): Promise<void> {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const payload = { sub: user._id.toHexString() };
+    const resetToken = this.jwtService.sign(payload, {
+      expiresIn: '15m', // Token valid for 15 minutes
+    });
+
+    // Send token via email
+    await this.emailService.sendPasswordReset(email, resetToken);
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    try {
+      const decoded: JwtRestPasswordPayload = this.jwtService.verify(token);
+      const user = await this.usersService.findOneById(decoded.sub);
+
+      if (!user || user._id.toHexString() !== decoded.sub) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      const hashedPassword = await PasswordHasher.hashPassword(newPassword);
+      await this.usersService.updatePassword(user._id, hashedPassword);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+}
+
+interface JwtRestPasswordPayload {
+  sub: string;
+  email: string;
 }

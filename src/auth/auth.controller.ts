@@ -15,8 +15,10 @@ import { TwoFactorAuthDto } from './dto/two-factor-auth.dto';
 import { GenerateTwoFactorSecretDto } from './dto/generate-two-factor-secret.dto';
 import { AllowPartialToken } from '../common/decorators/allow-partial-token.decorator';
 import { Public } from '../common/decorators/auth.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthenticatedRequest } from '../types/user-request.interface';
+import { PasswordResetRequestDto } from './dto/password-reset-request.dto';
+import { PasswordResetDto } from './dto/password-reset.dto';
 
 @ApiBearerAuth()
 @Controller('auth')
@@ -52,5 +54,21 @@ export class AuthController {
   async generate2faSecret(@Req() req: AuthenticatedRequest) {
     const email = req.user.email;
     return this.twoFactorService.generateTwoFactorSecret(email);
+  }
+
+  @Public()
+  @Post('request-password-reset')
+  @ApiOperation({ summary: 'Request a password reset link' })
+  @ApiResponse({ status: 200, description: 'Password reset email sent' })
+  async requestPasswordReset(@Body() dto: PasswordResetRequestDto) {
+    return this.authService.generateResetToken(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset the user password' })
+  @ApiResponse({ status: 200, description: 'Password successfully reset' })
+  async resetPassword(@Body() dto: PasswordResetDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 }

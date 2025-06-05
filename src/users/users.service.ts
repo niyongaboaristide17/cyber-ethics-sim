@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import * as crypto from 'crypto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -89,5 +88,16 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
     return deleted;
+  }
+
+  async updatePassword(userId: any, hashedPassword: string): Promise<void> {
+    const result = await this.userModel.updateOne(
+      { _id: userId },
+      { $set: { password: hashedPassword } },
+    );
+
+    if (result.matchedCount === 0) {
+      throw new NotFoundException('User not found');
+    }
   }
 }
