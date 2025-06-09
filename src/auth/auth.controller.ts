@@ -61,7 +61,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Request a password reset link' })
   @ApiResponse({ status: 200, description: 'Password reset email sent' })
   async requestPasswordReset(@Body() dto: PasswordResetRequestDto) {
-    return this.authService.generateResetToken(dto.email);
+    await this.authService.generateResetToken(dto.email);
+    return {
+      message: 'Password reset link sent',
+    };
   }
 
   @Public()

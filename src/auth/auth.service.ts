@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PasswordHasher } from '../shared/utils/password-hasher.util';
 import { UserDocument } from '../users/schemas/user.schema';
 import { EmailService } from '../email/email.service';
-import { PasswordResetDto } from './dto/password-reset.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +16,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async validateUser(email: string, password: string): Promise<UserDocument> {
@@ -57,7 +58,10 @@ export class AuthService {
       expiresIn: '15m', // Token valid for 15 minutes
     });
 
-    // Send token via email
+    // this.eventEmitter.emit(
+    //   'password.reset.requested',
+    //   new PasswordResetRequestedEvent(email, resetToken),
+    // );
     await this.emailService.sendPasswordReset(email, resetToken);
   }
 

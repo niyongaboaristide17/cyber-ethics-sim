@@ -14,6 +14,7 @@ services:
       - ./media/uploads/thumbnails:/app/uploads/thumbnails
     depends_on:
       - mongo
+      - redis
 
   mongo:
     image: mongo
@@ -40,5 +41,25 @@ services:
     depends_on:
       - mongo
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    restart: unless-stopped
+    ports:
+      - '8002:8001'
+    volumes:
+      - redisinsight_data:/db
+
 volumes:
   mongo_data:
+  redis_data:
+  redisinsight_data:
