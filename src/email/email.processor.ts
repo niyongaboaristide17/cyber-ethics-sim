@@ -1,14 +1,24 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { decrypt } from '../shared/utils/crypto.util';
 
+/**
+ * EmailProcessor handles background email jobs using BullMQ.
+ * It listens to the 'email' queue and processes different types of emails.
+ */
 @Processor('email')
 export class EmailProcessor extends WorkerHost {
   constructor(private mailerService: MailerService) {
     super();
   }
 
+  /**
+   * Main entry point for processing a job in the 'email' queue.
+   * Routes the job to the appropriate handler based on job name.
+   * @param job - The job object containing name and data.
+   * @returns Promise<any> result of the specific handler.
+   * @throws Error if job type is not supported.
+   */
   async process(job: Job<any, any, string>): Promise<any> {
     switch (job.name) {
       case 'password-reset':
@@ -19,12 +29,20 @@ export class EmailProcessor extends WorkerHost {
     }
   }
 
+  /**
+   * Handles password reset email job.
+   * Sends an email with a reset link to the user.
+   * @param job - The job object containing email and token.
+   */
   private async handlePasswordReset(
     job: Job<{ email: string; token: string }>,
   ) {
     const { email, token } = job.data;
+
+    // Construct password reset URL with token
     const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
 
+    // Send email using NestJS mailer service
     await this.mailerService.sendMail({
       to: email,
       subject: '🔒 Password Reset Request',
