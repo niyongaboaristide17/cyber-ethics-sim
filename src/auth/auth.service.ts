@@ -58,10 +58,6 @@ export class AuthService {
       expiresIn: '15m', // Token valid for 15 minutes
     });
 
-    // this.eventEmitter.emit(
-    //   'password.reset.requested',
-    //   new PasswordResetRequestedEvent(email, resetToken),
-    // );
     await this.emailService.sendPasswordReset(email, resetToken);
   }
 
