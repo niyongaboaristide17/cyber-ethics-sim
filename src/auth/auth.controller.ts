@@ -19,6 +19,16 @@ import { AuthenticatedRequest } from '../types/user-request.interface';
 import { PasswordResetRequestDto } from './dto/password-reset-request.dto';
 import { PasswordResetDto } from './dto/password-reset.dto';
 
+interface TwoFactorVerifyResponse {
+  accessToken: string;
+}
+
+interface TwoFactorSetupResponse {
+  secret: string;
+  url: string;
+  qrCode: string;
+}
+
 @ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
@@ -44,13 +54,15 @@ export class AuthController {
   async verify2fa(
     @Body() dto: TwoFactorAuthDto,
     @Req() req: AuthenticatedRequest,
-  ) {
+  ): Promise<TwoFactorVerifyResponse> {
     const email = req.user.email;
     return this.twoFactorService.verifyTwoFactor(email, dto.token);
   }
 
   @Post('2fa/generate')
-  async generate2faSecret(@Req() req: AuthenticatedRequest) {
+  async generate2faSecret(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<TwoFactorSetupResponse> {
     const email = req.user.email;
     return this.twoFactorService.generateTwoFactorSecret(email);
   }

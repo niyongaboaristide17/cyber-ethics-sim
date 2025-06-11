@@ -118,5 +118,4 @@ export class AuthService {
  */
 interface JwtRestPasswordPayload {
   sub: string; // User ID as subject
-  email?: string; // Optional email field (not used here but could be included)
 }
