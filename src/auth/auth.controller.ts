@@ -12,7 +12,6 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/SignIn.dto';
 import { TwoFactorService } from './two-factor/two-factor.service';
 import { TwoFactorAuthDto } from './dto/two-factor-auth.dto';
-import { GenerateTwoFactorSecretDto } from './dto/generate-two-factor-secret.dto';
 import { AllowPartialToken } from '../common/decorators/allow-partial-token.decorator';
 import { Public } from '../common/decorators/auth.decorator';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
