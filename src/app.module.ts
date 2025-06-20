@@ -9,6 +9,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EventsModule } from './events/events.module';
 import { EmailModule } from './email/email.module';
 import { BullModule } from '@nestjs/bullmq';
+import { ScenariosModule } from './scenarios/scenarios.module';
+import { ElasticModule } from './elastic/elastic.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { BullModule } from '@nestjs/bullmq';
     DatabaseModule,
     EventsModule,
     EmailModule,
+    ScenariosModule,
+    ElasticModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -3,11 +3,11 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: nestJS-starter
+    container_name: cyber_ethics
     restart: unless-stopped
     env_file: .env
     ports:
-      - '3000:3000'
+      - '8000:3000'
     volumes:
       - ./media/uploads:/app/uploads
       - ./media/uploads/images:/app/uploads/images
@@ -15,6 +15,8 @@ services:
     depends_on:
       - mongo
       - redis
+      - elasticsearch
+      - logstash
 
   mongo:
     image: mongo
@@ -32,12 +34,10 @@ services:
     ports:
       - '8081:8081'
     environment:
-      ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ""
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ""
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: admin
+      ME_CONFIG_MONGODB_SERVER: ${MONGO_HOST:-mongo}
+      ME_CONFIG_MONGODB_PORT: ${MONGO_PORT:-27017}
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME:-admin}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD:-admin}
     depends_on:
       - mongo
 
@@ -59,7 +59,51 @@ services:
     volumes:
       - redisinsight_data:/db
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - '5601:5601'
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    build:
+      context: .
+      dockerfile: Dockerfile.logstash
+    container_name: logstash
+    depends_on:
+      - mongo
+      - elasticsearch
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/mongodb_placeholder:/usr/share/logstash/mongodb_placeholders
+    environment:
+      LS_JAVA_OPTS: "-Xms512m -Xmx512m"
+    command: logstash -f /usr/share/logstash/pipeline/mongodb-to-es.conf
+
+
 volumes:
   mongo_data:
   redis_data:
   redisinsight_data:
+  es_data:

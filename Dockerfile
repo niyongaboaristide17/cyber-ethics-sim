@@ -7,8 +7,6 @@ COPY package*.json ./
 RUN npm install --production
 RUN npm install -D @nestjs/cli
 
-RUN mkdir -p uploads/thumbnails uploads/images
-
 COPY .env* ./
 
 COPY . .
